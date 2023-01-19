@@ -1,0 +1,947 @@
+RIKOR-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+    Integer32, enterprises
+        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, TruthValue
+        FROM SNMPv2-TC
+    MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+        FROM SNMPv2-CONF
+;
+
+rikor MODULE-IDENTITY
+    LAST-UPDATED    "202110010000Z"
+    ORGANIZATION    "Rikor"
+    CONTACT-INFO
+        "Primary Contact: SNMP support team
+         email:     snmp@rikor.com"
+    DESCRIPTION
+        "Made table indexes read-only fields"
+    REVISION        "202110010000Z"
+    DESCRIPTION
+        "Added RIKOR products OIDs"
+    REVISION        "202106170000Z"
+    DESCRIPTION
+        "Added node for products manufactored by RIKOR LLC"
+    REVISION        "201909260000Z"
+    DESCRIPTION
+        "Added inventory table"
+    REVISION        "201806190000Z"
+    DESCRIPTION
+        "Added software items table"
+    REVISION        "201805110000Z"
+    DESCRIPTION
+        "Added current and power sensor objects"
+    REVISION        "201802080000Z"
+    DESCRIPTION
+        "This MIB module defines objects for OpenBMC sensors derived data."
+    REVISION        "201712080000Z"
+    DESCRIPTION
+        "Add sensors state fields"
+    REVISION        "201711150000Z"
+    DESCRIPTION
+        "Add format for sensors values"
+    REVISION        "201711031000Z"
+    DESCRIPTION
+        "First draft"
+    ::= { enterprises 65321 }
+
+rikorNotifications      OBJECT IDENTIFIER ::= { rikor 0 }
+rikorSensors            OBJECT IDENTIFIER ::= { rikor 1 }
+rikorConformance        OBJECT IDENTIFIER ::= { rikor 2 }
+rikorCompliances        OBJECT IDENTIFIER ::= { rikorConformance 1 }
+rikorGroups             OBJECT IDENTIFIER ::= { rikorConformance 2 }
+rikorProducts           OBJECT IDENTIFIER ::= { rikor 3 }
+-- rikorInventoryTable takes { rikor 4 }
+-- rikorSoftwareTable takes { rikor 5 }
+
+-- OIDs for SNMPv2-MIB::sysObjectID field
+vesninBmc               OBJECT IDENTIFIER ::= { rikorProducts 1 }
+vegmanBmc               OBJECT IDENTIFIER ::= { rikorProducts 20 }
+tatlinArchiveSBmc       OBJECT IDENTIFIER ::= { rikorProducts 21 }
+
+--
+
+rikorHostPowerState OBJECT-TYPE
+    SYNTAX          INTEGER { unknown(-1), off(0), on(1) }
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "Power state of the host"
+    DEFVAL { 0 }
+    ::= { rikorSensors 1 }
+
+--
+
+Degrees ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT    "d-3"
+    STATUS          current
+    DESCRIPTION     "Degrees Celsius"
+    SYNTAX          Integer32
+
+Voltage ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT    "d-3"
+    STATUS          current
+    DESCRIPTION     "Volt"
+    SYNTAX          Integer32
+
+RPMS ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT    "d-0"
+    STATUS          current
+    DESCRIPTION     "RPM"
+    SYNTAX          Integer32
+
+Current ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT    "d-3"
+    STATUS          current
+    DESCRIPTION     "Ampere"
+    SYNTAX          Integer32
+
+Power ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT    "d-3"
+    STATUS          current
+    DESCRIPTION     "Watt"
+    SYNTAX          Integer32
+
+SensorState ::= TEXTUAL-CONVENTION
+    STATUS          current
+    DESCRIPTION     "Actual state of sensor"
+    SYNTAX          INTEGER {
+                              disabled(0),
+                              normal(1),
+                              warningLow(2),
+                              warningHigh(3),
+                              criticalLow(4),
+                              criticalHigh(5)
+                            }
+
+--
+
+rikorTempSensorsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF RIKORTempSensorsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table of temperature sensors and their values."
+    ::= { rikorSensors 2 }
+
+rikorTempSensorsEntry OBJECT-TYPE
+    SYNTAX      RIKORTempSensorsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry containing a device and its statistics."
+    INDEX       { rikorTempSensorName }
+    ::= { rikorTempSensorsTable 1 }
+
+RIKORTempSensorsEntry ::= SEQUENCE {
+    rikorTempSensorName             OCTET STRING,
+    rikorTempSensorValue            Degrees,
+    rikorTempSensorWarnLow          Degrees,
+    rikorTempSensorWarnHigh         Degrees,
+    rikorTempSensorCritLow          Degrees,
+    rikorTempSensorCritHigh         Degrees,
+    rikorTempSensorState            SensorState
+}
+
+rikorTempSensorName OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(1..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the temperature sensor."
+    ::= { rikorTempSensorsEntry 1 }
+
+rikorTempSensorValue OBJECT-TYPE
+    SYNTAX      Degrees
+    UNITS       "°C"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current temperature from sensor."
+    ::= { rikorTempSensorsEntry 2 }
+
+rikorTempSensorWarnLow OBJECT-TYPE
+    SYNTAX      Degrees
+    UNITS       "°C"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The warning low value of sensor."
+    ::= { rikorTempSensorsEntry 3 }
+
+rikorTempSensorWarnHigh OBJECT-TYPE
+    SYNTAX      Degrees
+    UNITS       "°C"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The warning high value of sensor."
+    ::= { rikorTempSensorsEntry 4 }
+
+rikorTempSensorCritLow OBJECT-TYPE
+    SYNTAX      Degrees
+    UNITS       "°C"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The critical low value of sensor."
+    ::= { rikorTempSensorsEntry 5 }
+
+rikorTempSensorCritHigh OBJECT-TYPE
+    SYNTAX      Degrees
+    UNITS       "°C"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The critical high value of sensor."
+    ::= { rikorTempSensorsEntry 6 }
+
+rikorTempSensorState OBJECT-TYPE
+    SYNTAX      SensorState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Current state of sensor"
+    ::= { rikorTempSensorsEntry 7 }
+
+--
+
+rikorVoltSensorsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF RIKORVoltSensorsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table of voltage sensors and their values."
+    ::= { rikorSensors 3 }
+
+rikorVoltSensorsEntry OBJECT-TYPE
+    SYNTAX      RIKORVoltSensorsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry containing a device and its statistics."
+    INDEX       { rikorVoltSensorName }
+    ::= { rikorVoltSensorsTable 1 }
+
+RIKORVoltSensorsEntry ::= SEQUENCE {
+    rikorVoltSensorName             OCTET STRING,
+    rikorVoltSensorValue            Voltage,
+    rikorVoltSensorWarnLow          Voltage,
+    rikorVoltSensorWarnHigh         Voltage,
+    rikorVoltSensorCritLow          Voltage,
+    rikorVoltSensorCritHigh         Voltage,
+    rikorVoltSensorState            SensorState
+}
+
+rikorVoltSensorName OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(1..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the voltage sensor."
+    ::= { rikorVoltSensorsEntry 1 }
+
+rikorVoltSensorValue OBJECT-TYPE
+    SYNTAX      Voltage
+    UNITS       "V"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current voltage from sensor."
+    ::= { rikorVoltSensorsEntry 2 }
+
+rikorVoltSensorWarnLow OBJECT-TYPE
+    SYNTAX      Voltage
+    UNITS       "V"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The warning low value of sensor."
+    ::= { rikorVoltSensorsEntry 3 }
+
+rikorVoltSensorWarnHigh OBJECT-TYPE
+    SYNTAX      Voltage
+    UNITS       "V"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The warning high value of sensor."
+    ::= { rikorVoltSensorsEntry 4 }
+
+rikorVoltSensorCritLow OBJECT-TYPE
+    SYNTAX      Voltage
+    UNITS       "V"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The critical low value of sensor."
+    ::= { rikorVoltSensorsEntry 5 }
+
+rikorVoltSensorCritHigh OBJECT-TYPE
+    SYNTAX      Voltage
+    UNITS       "V"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The critical high value of sensor."
+    ::= { rikorVoltSensorsEntry 6 }
+
+rikorVoltSensorState OBJECT-TYPE
+    SYNTAX      SensorState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Current state of sensor"
+    ::= { rikorVoltSensorsEntry 7 }
+
+--
+
+rikorTachSensorsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF RIKORTachSensorsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table of tachometer sensors and their values."
+    ::= { rikorSensors 4 }
+
+rikorTachSensorsEntry OBJECT-TYPE
+    SYNTAX      RIKORTachSensorsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry containing a device and its statistics."
+    INDEX       { rikorTachSensorName }
+    ::= { rikorTachSensorsTable 1 }
+
+RIKORTachSensorsEntry ::= SEQUENCE {
+    rikorTachSensorName             OCTET STRING,
+    rikorTachSensorValue            RPMS,
+    rikorTachSensorWarnLow          RPMS,
+    rikorTachSensorWarnHigh         RPMS,
+    rikorTachSensorCritLow          RPMS,
+    rikorTachSensorCritHigh         RPMS,
+    rikorTachSensorState            SensorState
+}
+
+rikorTachSensorName OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(1..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the tachometer sensor."
+    ::= { rikorTachSensorsEntry 1 }
+
+rikorTachSensorValue OBJECT-TYPE
+    SYNTAX      RPMS
+    UNITS       "RPM"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current tachometer from sensor."
+    ::= { rikorTachSensorsEntry 2 }
+
+rikorTachSensorWarnLow OBJECT-TYPE
+    SYNTAX      RPMS
+    UNITS       "RPM"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The warning low value of sensor."
+    ::= { rikorTachSensorsEntry 3 }
+
+rikorTachSensorWarnHigh OBJECT-TYPE
+    SYNTAX      RPMS
+    UNITS       "RPM"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The warning high value of sensor."
+    ::= { rikorTachSensorsEntry 4 }
+
+rikorTachSensorCritLow OBJECT-TYPE
+    SYNTAX      RPMS
+    UNITS       "RPM"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The critical low value of sensor."
+    ::= { rikorTachSensorsEntry 5 }
+
+rikorTachSensorCritHigh OBJECT-TYPE
+    SYNTAX      RPMS
+    UNITS       "RPM"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The critical high value of sensor."
+    ::= { rikorTachSensorsEntry 6 }
+
+rikorTachSensorState OBJECT-TYPE
+    SYNTAX      SensorState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Current state of sensor"
+    ::= { rikorTachSensorsEntry 7 }
+
+--
+
+rikorCurrSensorsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF RIKORCurrSensorsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table of current sensors and their values."
+    ::= { rikorSensors 5 }
+
+rikorCurrSensorsEntry OBJECT-TYPE
+    SYNTAX      RIKORCurrSensorsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry containing a device and its statistics."
+    INDEX       { rikorCurrSensorName }
+    ::= { rikorCurrSensorsTable 1 }
+
+RIKORCurrSensorsEntry ::= SEQUENCE {
+    rikorCurrSensorName             OCTET STRING,
+    rikorCurrSensorValue            Current,
+    rikorCurrSensorWarnLow          Current,
+    rikorCurrSensorWarnHigh         Current,
+    rikorCurrSensorCritLow          Current,
+    rikorCurrSensorCritHigh         Current,
+    rikorCurrSensorState            SensorState
+}
+
+rikorCurrSensorName OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(1..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the current sensor."
+    ::= { rikorCurrSensorsEntry 1 }
+
+rikorCurrSensorValue OBJECT-TYPE
+    SYNTAX      Current
+    UNITS       "A"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current amperage from sensor."
+    ::= { rikorCurrSensorsEntry 2 }
+
+rikorCurrSensorWarnLow OBJECT-TYPE
+    SYNTAX      Current
+    UNITS       "A"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The warning low value of sensor."
+    ::= { rikorCurrSensorsEntry 3 }
+
+rikorCurrSensorWarnHigh OBJECT-TYPE
+    SYNTAX      Current
+    UNITS       "A"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The warning high value of sensor."
+    ::= { rikorCurrSensorsEntry 4 }
+
+rikorCurrSensorCritLow OBJECT-TYPE
+    SYNTAX      Current
+    UNITS       "A"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The critical low value of sensor."
+    ::= { rikorCurrSensorsEntry 5 }
+
+rikorCurrSensorCritHigh OBJECT-TYPE
+    SYNTAX      Current
+    UNITS       "A"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The critical high value of sensor."
+    ::= { rikorCurrSensorsEntry 6 }
+
+rikorCurrSensorState OBJECT-TYPE
+    SYNTAX      SensorState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Current state of sensor"
+    ::= { rikorCurrSensorsEntry 7 }
+
+--
+
+rikorPowerSensorsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF RIKORPowerSensorsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table of power sensors and their values."
+    ::= { rikorSensors 6 }
+
+rikorPowerSensorsEntry OBJECT-TYPE
+    SYNTAX      RIKORPowerSensorsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry containing a device and its statistics."
+    INDEX       { rikorPowerSensorName }
+    ::= { rikorPowerSensorsTable 1 }
+
+RIKORPowerSensorsEntry ::= SEQUENCE {
+    rikorPowerSensorName             OCTET STRING,
+    rikorPowerSensorValue            Power,
+    rikorPowerSensorWarnLow          Power,
+    rikorPowerSensorWarnHigh         Power,
+    rikorPowerSensorCritLow          Power,
+    rikorPowerSensorCritHigh         Power,
+    rikorPowerSensorState            SensorState
+}
+
+rikorPowerSensorName OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(1..32))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the power sensor."
+    ::= { rikorPowerSensorsEntry 1 }
+
+rikorPowerSensorValue OBJECT-TYPE
+    SYNTAX      Power
+    UNITS       "W"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current amperage from sensor."
+    ::= { rikorPowerSensorsEntry 2 }
+
+rikorPowerSensorWarnLow OBJECT-TYPE
+    SYNTAX      Power
+    UNITS       "W"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The warning low value of sensor."
+    ::= { rikorPowerSensorsEntry 3 }
+
+rikorPowerSensorWarnHigh OBJECT-TYPE
+    SYNTAX      Power
+    UNITS       "W"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The warning high value of sensor."
+    ::= { rikorPowerSensorsEntry 4 }
+
+rikorPowerSensorCritLow OBJECT-TYPE
+    SYNTAX      Power
+    UNITS       "W"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The critical low value of sensor."
+    ::= { rikorPowerSensorsEntry 5 }
+
+rikorPowerSensorCritHigh OBJECT-TYPE
+    SYNTAX      Power
+    UNITS       "W"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The critical high value of sensor."
+    ::= { rikorPowerSensorsEntry 6 }
+
+rikorPowerSensorState OBJECT-TYPE
+    SYNTAX      SensorState
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Current state of sensor"
+    ::= { rikorPowerSensorsEntry 7 }
+
+--
+rikorSoftwareTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF RIKORSoftwareEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table of existing firmware images."
+    ::= { rikor 5 }
+
+rikorSoftwareEntry OBJECT-TYPE
+    SYNTAX      RIKORSoftwareEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry containing a firmware images details."
+    INDEX       { rikorSoftwareHash }
+    ::= { rikorSoftwareTable 1 }
+
+RIKORSoftwareEntry ::= SEQUENCE {
+    rikorSoftwareHash       OCTET STRING,
+    rikorSoftwareVersion    OCTET STRING,
+    rikorSoftwarePurpose    Integer32,
+    rikorSoftwareActivation Integer32,
+    rikorSoftwarePriority   Integer32
+}
+
+rikorSoftwareHash OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(1..8))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The software hash represent as string."
+    ::= { rikorSoftwareEntry 1 }
+
+rikorSoftwareVersion OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The software version."
+    ::= { rikorSoftwareEntry 2 }
+
+rikorSoftwarePurpose OBJECT-TYPE
+    SYNTAX      INTEGER { unknown(0), other(1), system(2), bmc(3), host(4) }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The software version purpose."
+    ::= { rikorSoftwareEntry 3 }
+
+rikorSoftwareActivation OBJECT-TYPE
+    SYNTAX      INTEGER { notReady(0), invalid(1), ready(2),
+                          activating(3), active(4), failed(5) }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current activation state of the software."
+    ::= { rikorSoftwareEntry 4 }
+
+rikorSoftwarePriority OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The piority, for redundancy purposes, of the associated software."
+    ::= { rikorSoftwareEntry 5 }
+
+--
+
+rikorInventoryTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF RIKORInventoryEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Table of inventory items."
+    ::= { rikor 4 }
+
+rikorInventoryEntry OBJECT-TYPE
+    SYNTAX      RIKORInventoryEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry containing a inventory item details."
+    INDEX       { rikorInventoryPath }
+    ::= { rikorInventoryTable 1 }
+
+RIKORInventoryEntry ::= SEQUENCE {
+    rikorInventoryPath          OCTET STRING,
+    rikorInventoryName          OCTET STRING,
+    rikorInventoryManufacturer  OCTET STRING,
+    rikorInventoryBuildDate     OCTET STRING,
+    rikorInventoryModel         OCTET STRING,
+    rikorInventoryPartNumber    OCTET STRING,
+    rikorInventorySerialNumber  OCTET STRING,
+    rikorInventoryVersion       OCTET STRING,
+    rikorInventoryPresent       TruthValue,
+    rikorInventoryFunctional    TruthValue
+}
+
+rikorInventoryPath OBJECT-TYPE
+    SYNTAX      OCTET STRING(SIZE(1..117))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The DBus path of the inventory item based on inventory folder."
+    ::= { rikorInventoryEntry 1 }
+
+rikorInventoryName OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The human readable name of the inventory item."
+    ::= { rikorInventoryEntry 2 }
+
+rikorInventoryManufacturer OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The inventory item manufacturer."
+    ::= { rikorInventoryEntry 3 }
+
+rikorInventoryBuildDate OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The date of inventory item manufacture in YYYYMMDD format."
+    ::= { rikorInventoryEntry 4 }
+
+rikorInventoryModel OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The model of the inventory item."
+    ::= { rikorInventoryEntry 5 }
+
+rikorInventoryPartNumber OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The inventory item part number, typically a stocking number."
+    ::= { rikorInventoryEntry 6 }
+
+rikorInventorySerialNumber OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The inventory item serial number."
+    ::= { rikorInventoryEntry 7 }
+
+rikorInventoryVersion OBJECT-TYPE
+    SYNTAX      OCTET STRING
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The version of the inventory item."
+    ::= { rikorInventoryEntry 8 }
+
+rikorInventoryPresent OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Whether or not the inventory item is present."
+    ::= { rikorInventoryEntry 9 }
+
+rikorInventoryFunctional OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "the inventory item is functional or not."
+    ::= { rikorInventoryEntry 10 }
+
+--
+
+rikorHostPowerStateNotification NOTIFICATION-TYPE
+    OBJECTS     { rikorHostPowerState }
+    STATUS      current
+    DESCRIPTION
+        "Notification about changed power state of host"
+    ::= { rikorNotifications 1 }
+
+rikorTachSensorStateNotification NOTIFICATION-TYPE
+    OBJECTS     { rikorTachSensorState }
+    STATUS      current
+    DESCRIPTION
+        "Notification about changed state of tachometer sensor"
+    ::= { rikorNotifications 4 }
+
+rikorTempSensorStateNotification NOTIFICATION-TYPE
+    OBJECTS     { rikorTempSensorState }
+    STATUS      current
+    DESCRIPTION
+        "Notification about changed state of temperature sensor"
+    ::= { rikorNotifications 2 }
+
+rikorVoltSensorStateNotification NOTIFICATION-TYPE
+    OBJECTS     { rikorVoltSensorState }
+    STATUS      current
+    DESCRIPTION
+        "Notification about changed state of voltage sensor"
+    ::= { rikorNotifications 3 }
+
+rikorCurrSensorStateNotification NOTIFICATION-TYPE
+    OBJECTS     { rikorCurrSensorState }
+    STATUS      current
+    DESCRIPTION
+        "Notification about changed state of current sensor"
+    ::= { rikorNotifications 5 }
+
+rikorPwrSensorStateNotification NOTIFICATION-TYPE
+    OBJECTS     { rikorPowerSensorState }
+    STATUS      current
+    DESCRIPTION
+        "Notification about changed state of current sensor"
+    ::= { rikorNotifications 6 }
+
+rikorInventoryItemNotification NOTIFICATION-TYPE
+    OBJECTS     { rikorInventoryPresent,
+                  rikorInventoryFunctional }
+    STATUS      current
+    DESCRIPTION
+        "Notification about changed presence or functional
+        of the inventory item."
+    ::= { rikorNotifications 7 }
+
+--
+
+rikorCommpliance MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The compliance statement for sensors"
+    MODULE      -- this module
+    MANDATORY-GROUPS { rikorNotificationsGroup,
+                       rikorScalarFieldsGroup,
+                       rikorTempSensorsTableGroup,
+                       rikorVoltSensorsTableGroup,
+                       rikorTachSensorsTableGroup,
+                       rikorCurrSensorsTableGroup,
+                       rikorPowerSensorsTableGroup,
+                       rikorSoftwareTableGroup,
+                       rikorInventoryTableGroup
+                     }
+    ::= { rikorCompliances 1 }
+
+rikorNotificationsGroup NOTIFICATION-GROUP
+    NOTIFICATIONS   { rikorHostPowerStateNotification,
+                      rikorTachSensorStateNotification,
+                      rikorTempSensorStateNotification,
+                      rikorVoltSensorStateNotification,
+                      rikorCurrSensorStateNotification,
+                      rikorPwrSensorStateNotification,
+                      rikorInventoryItemNotification
+                    }
+    STATUS      current
+    DESCRIPTION
+        "A collectopn of notifications"
+    ::= { rikorGroups 10 }
+
+rikorScalarFieldsGroup OBJECT-GROUP
+    OBJECTS     { rikorHostPowerState }
+    STATUS      current
+    DESCRIPTION
+        "A collection of scalar fields"
+    ::= { rikorGroups 1 }
+
+rikorTempSensorsTableGroup OBJECT-GROUP
+    OBJECTS     { rikorTempSensorName,
+                  rikorTempSensorValue,
+                  rikorTempSensorWarnLow,
+                  rikorTempSensorWarnHigh,
+                  rikorTempSensorCritLow,
+                  rikorTempSensorCritHigh,
+                  rikorTempSensorState
+                }
+    STATUS      current
+    DESCRIPTION
+        "A collection of objects providing information
+        about temperature sensors."
+    ::= { rikorGroups 2 }
+
+rikorVoltSensorsTableGroup OBJECT-GROUP
+    OBJECTS     { rikorVoltSensorName,
+                  rikorVoltSensorValue,
+                  rikorVoltSensorWarnLow,
+                  rikorVoltSensorWarnHigh,
+                  rikorVoltSensorCritLow,
+                  rikorVoltSensorCritHigh,
+                  rikorVoltSensorState
+                }
+    STATUS      current
+    DESCRIPTION
+        "A collection of objects providing information
+        about voltage sensors."
+    ::= { rikorGroups 3 }
+
+rikorTachSensorsTableGroup OBJECT-GROUP
+    OBJECTS     { rikorTachSensorName,
+                  rikorTachSensorValue,
+                  rikorTachSensorWarnLow,
+                  rikorTachSensorWarnHigh,
+                  rikorTachSensorCritLow,
+                  rikorTachSensorCritHigh,
+                  rikorTachSensorState
+                }
+    STATUS      current
+    DESCRIPTION
+        "A collection of objects providing information
+        about tachometer sensors."
+    ::= { rikorGroups 4 }
+
+rikorCurrSensorsTableGroup OBJECT-GROUP
+    OBJECTS     { rikorCurrSensorName,
+                  rikorCurrSensorValue,
+                  rikorCurrSensorWarnLow,
+                  rikorCurrSensorWarnHigh,
+                  rikorCurrSensorCritLow,
+                  rikorCurrSensorCritHigh,
+                  rikorCurrSensorState
+                }
+    STATUS      current
+    DESCRIPTION
+        "A collection of objects providing information
+        about current sensors."
+    ::= { rikorGroups 5 }
+
+rikorPowerSensorsTableGroup OBJECT-GROUP
+    OBJECTS     { rikorPowerSensorName,
+                  rikorPowerSensorValue,
+                  rikorPowerSensorWarnLow,
+                  rikorPowerSensorWarnHigh,
+                  rikorPowerSensorCritLow,
+                  rikorPowerSensorCritHigh,
+                  rikorPowerSensorState
+                }
+    STATUS      current
+    DESCRIPTION
+        "A collection of objects providing information
+        about power sensors."
+    ::= { rikorGroups 6 }
+
+rikorSoftwareTableGroup OBJECT-GROUP
+    OBJECTS     { rikorSoftwareHash,
+                  rikorSoftwareVersion,
+                  rikorSoftwarePurpose,
+                  rikorSoftwareActivation,
+                  rikorSoftwarePriority
+                }
+    STATUS      current
+    DESCRIPTION
+        "A collection for objects providing information
+        about existing software."
+    ::= { rikorGroups 7 }
+
+rikorInventoryTableGroup OBJECT-GROUP
+    OBJECTS     { rikorInventoryPath,
+                  rikorInventoryName,
+                  rikorInventoryManufacturer,
+                  rikorInventoryBuildDate,
+                  rikorInventoryPartNumber,
+                  rikorInventorySerialNumber,
+                  rikorInventoryVersion,
+                  rikorInventoryModel,
+                  rikorInventoryPresent,
+                  rikorInventoryFunctional
+                }
+    STATUS      current
+    DESCRIPTION
+        "A collection of objects providing information
+         about existing itventory items."
+    ::= { rikorGroups 8 }
+
+END
