@@ -1,0 +1,3 @@
+[submodule "mibs"]
+	path = mibs
+	url = git://github.com/askourik/snmp-mibs.git
