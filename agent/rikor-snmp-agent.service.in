@@ -1,0 +1,15 @@
+[Unit]
+Description=Rikor SNMP Sub Agent
+PartOf=snmpd.service
+After=snmpd.service
+After=obmc-mapper.target
+
+[Service]
+Restart=always
+Environment=OPTIONS="-Ls0-6d"
+EnvironmentFile=-@sysconfdir@/default/rikor-snmp-agent
+ExecStart=@bindir@/rikor-snmp-agent $OPTIONS
+SyslogIdentifier=rikor-snmp
+
+[Install]
+WantedBy=snmpd.service
