@@ -1,0 +1,13 @@
+[Unit]
+Description=Rikor SNMP configuration manager
+After=snmpd.service
+
+[Service]
+ExecStart=@bindir@/rikor-snmpcfg
+SyslogIdentifier=rikor-snmpcfg
+Restart=always
+Type=dbus
+BusName=xyz.openbmc_project.SNMPCfg
+
+[Install]
+WantedBy=@SYSTEMD_TARGET@
