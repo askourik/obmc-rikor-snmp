@@ -1,0 +1,13 @@
+description: >
+  SNMP daemon configuration manager.
+
+properties:
+  - name: Community
+    type: string
+    description: >
+      SNMPv1 and SNMPv2 community that allows read-only (GET and GETNEXT) access
+      to the data providing by SNMP daemon.
+    errors:
+      - xyz.openbmc_project.Common.Error.InternalFailure
+      - xyz.openbmc_project.Common.Error.InvalidArgument
+
